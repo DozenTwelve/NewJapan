@@ -200,7 +200,7 @@ function App() {
   `.trim();
   
     try {
-      const res = await fetch("http://localhost:3001/api/explain", {
+      const res = await fetch("https://newjapan-api.onrender.com/api/explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt })
@@ -250,7 +250,7 @@ function App() {
     `.trim();
   
     try {
-      const res = await fetch("http://localhost:3001/api/explain", {
+      const res = await fetch("https://newjapan-api.onrender.com/api/explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
