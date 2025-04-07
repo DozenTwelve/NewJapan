@@ -8,25 +8,8 @@ import SentenceAnalysisPopup from "./components/SentenceAnalysisPopup";
 import QuestionModal from "./components/QuestionModal";
 import SimplifiedNews from "./components/SimplifiedNews";
 import OriginalText from "./components/OriginalText";
+import ScoreSummaryModal from "./components/ScoreSummaryModal";
 
-function Button({ children, color = "blue", className = "", ...props }) {
-  const colorMap = {
-    blue: "bg-blue-600 hover:bg-blue-700",
-    green: "bg-green-600 hover:bg-green-700",
-    red: "bg-red-600 hover:bg-red-700",
-    gray: "bg-gray-500 hover:bg-gray-600",
-    yellow: "bg-yellow-500 hover:bg-yellow-600",
-    indigo: "bg-indigo-600 hover:bg-indigo-700",
-  };
-  const base =
-    "px-4 py-2 rounded-md text-white font-semibold " +
-    (colorMap[color] || colorMap.blue);
-  return (
-    <button className={`${base} ${className}`} {...props}>
-      {children}
-    </button>
-  );
-}
 
 function App() {
   const [newsList, setNewsList] = useState([]);
@@ -40,7 +23,24 @@ function App() {
   const [answeredCount, setAnsweredCount] = useState(0);
   const [analyzingSentence, setAnalyzingSentence] = useState(null);
   const [analysisResult, setAnalysisResult] = useState("");
+  const [lang, setLang] = useState("vi");
+  const [showScoreSummary, setShowScoreSummary] = useState(false);
+  const [aiUsage, setAiUsage] = useState(0);
 
+  const [keywordDict, setKeywordDict] = useState({});
+  const [keywords, setKeywords] = useState([]);
+
+  // 当前新闻数据
+  const newsData = newsList[currentIndex];
+  const questionText = newsData?.question?.text;
+  const correctAnswer = newsData?.question?.answer;
+
+  const sentences = (newsData?.original || "")
+    .split(/(?<=[。！？\n])/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  // 新闻列表初始化
   useEffect(() => {
     fetch("/news.json")
       .then((res) => res.json())
@@ -56,45 +56,81 @@ function App() {
       setScore(savedData.score || 0);
       setAnsweredCount(savedData.answered || 0);
     } else {
-      localStorage.setItem(
-        "quizData",
-        JSON.stringify({ date: today, score: 0, answered: 0 })
-      );
+      localStorage.setItem("quizData", JSON.stringify({ date: today, score: 0, answered: 0 }));
     }
   }, []);
 
-  const newsData = newsList[currentIndex];
-  if (!newsData) return <div className="text-center mt-10">Loading...</div>;
+  // 加载词典
+  useEffect(() => {
+    fetch("/keyword-dict.json")
+      .then((res) => res.json())
+      .then((data) => setKeywordDict(data));
+  }, []);
 
-  const questionText = newsData.question?.text;
-  const correctAnswer = newsData.question?.answer;
+  // 每次新闻切换，更新关键词
+  useEffect(() => {
+    const title = newsData?.title;
+    if (title && keywordDict?.[title]) {
+      setKeywords(keywordDict[title].keywords || []);
+    } else {
+      setKeywords([]);
+    }
+  }, [newsData, keywordDict]);
 
-  const sentences = (newsData.original || "")
-  .split(/(?<=[。！？\n])/)
-  .map((s) => s.trim())
-  .filter((s) => s.length > 0);
+  const [aiCount, setAiCount] = useState(0);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const saved = JSON.parse(localStorage.getItem("aiUsage") || "{}");
+    if (saved.date === today) {
+      setAiCount(saved.count || 0);
+    } else {
+      localStorage.setItem("aiUsage", JSON.stringify({ date: today, count: 0 }));
+    }
+  }, []);  
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const savedData = JSON.parse(localStorage.getItem("quizData")) || {};
+    if (savedData.date === today) {
+      setScore(savedData.score || 0);
+      setAnsweredCount(savedData.answered || 0);
+    } else {
+      localStorage.setItem("quizData", JSON.stringify({ date: today, score: 0, answered: 0 }));
+    }
+  
+    const savedAI = JSON.parse(localStorage.getItem("aiUsage")) || {};
+    if (savedAI.date === today) {
+      setAiUsage(savedAI.count || 0);
+    } else {
+      localStorage.setItem("aiUsage", JSON.stringify({ date: today, count: 0 }));
+      setAiUsage(0);
+    }
+  }, []);  
 
   function handleAnswer(userAnswer) {
-    if (answeredCount >= 1000) {
-      alert("今日のクイズは1000問までです。明日また挑戦してください！");
+    if (answeredCount >= 10) {
+      alert("今日のクイズは10問までです。明日また挑戦してください！");
       return;
     }
-
+  
     const isCorrectNow = userAnswer === correctAnswer;
     setIsCorrect(isCorrectNow);
     setAnswerSelected(true);
-
+  
     const newScore = isCorrectNow ? score + 1 : score;
     const newAnswered = answeredCount + 1;
-
+  
     setScore(newScore);
     setAnsweredCount(newAnswered);
-
+  
     const today = new Date().toISOString().split("T")[0];
-    localStorage.setItem(
-      "quizData",
-      JSON.stringify({ date: today, score: newScore, answered: newAnswered })
-    );
+    localStorage.setItem("quizData", JSON.stringify({ date: today, score: newScore, answered: newAnswered }));
+  
+    // 🎉 正好是第10题时，显示得分总结
+    if (newAnswered === 10) {
+      setShowScoreSummary(true);
+    }
   }
 
   function goToNextNews() {
@@ -115,144 +151,39 @@ function App() {
     setSelectedWord(null);
   }
 
-// 保留你的原始版本，用于段落
-  function cleanLineForParagraph(line) {
-    return line
-      .trimStart() // 先清除开头全角/半角空格
-      .replace(/^(\*+|→|→\*+|\*+→)+\s*/g, "")
-      .replace(/^・/g, "")
-      .trimEnd()
-  }
-
-  // 另一个用于列表（不缩进）
-  function cleanLineForListItem(line) {
-    return line
-      .replace(/^(\*+|→|→\*+|\*+→)+\s*/g, "")
-      .replace(/^・/g, "")
-      .replace(/^[-*]\s*/, "") // 处理 markdown 的 - * 等符号
-      .trim();
-  }
-
-  function renderWithClickableKanji(line, onWordClick) {
-    // 高亮逻辑：连续2个以上汉字，或 汉字+假名
-    const regex = /[\u4E00-\u9FFF]{2,}|[\u4E00-\u9FFF][ぁ-んァ-ン]+/g;
-  
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-  
-    while ((match = regex.exec(line)) !== null) {
-      const { index } = match;
-      const word = match[0];
-  
-      if (index > lastIndex) {
-        parts.push(line.slice(lastIndex, index)); // 非匹配部分
+  function handleWordClick(word) {
+    const entry = keywords.find((k) => k.word === word);
+    setSelectedWord(
+      entry || {
+        word,
+        reading: "",
+        zh: "（辞書にありません）",
+        vi: "（không có trong từ điển）",
       }
-  
-      parts.push(
-        <span
-          key={index}
-          className="underline decoration-dotted cursor-pointer text-inherit hover:bg-blue-100 px-1"
-          onClick={() => onWordClick(word)}
-        >
-          {word}
-        </span>
-      );
-  
-      lastIndex = index + word.length;
-    }
-  
-    if (lastIndex < line.length) {
-      parts.push(line.slice(lastIndex));
-    }
-  
-    return parts;
+    );
   }
-  
 
-  async function handleWordClick(word) {
-    setSelectedWord({
-      word,
-      reading: "",
-      aiResult: "AIによる翻訳中...",
-      audio: null
-    });
-  
-    const result = await translateWordWithAI(word);
-  
-    setSelectedWord({
-      word,
-      reading: result.reading,
-      aiResult: result.translation,
-      audio: null
-    });
-  }
-  
-
-  async function translateWordWithAI(word) {
-    const prompt = `
-  以下の日本語の単語について、ベトナム人学習者向けに簡潔に説明してください。
-  
-  - ベトナム語訳を必ず含めてください。
-  - ひらがな読みも表示してください。
-  
-  単語：「${word}」
-  
-  出力形式：
-  - 単語：...
-  - よみ：...
-  - ベトナム語訳：...
-  `.trim();
-  
-    try {
-      const res = await fetch("https://newjapan-api.onrender.com/api/explain", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
-      });
-  
-      const raw = await res.text();
-      const data = JSON.parse(raw);
-      const content = data.choices?.[0]?.message?.content || "";
-  
-      // 正则提取部分内容
-      const readingMatch = content.match(/よみ：(.+?)(?:\n|$)/);
-      const vietnameseMatch = content.match(/ベトナム語訳：(.+?)(?:\n|$)/);
-  
-      return {
-        reading: readingMatch ? readingMatch[1].trim() : "（不明）",
-        translation: vietnameseMatch ? vietnameseMatch[1].trim() : "（訳なし）",
-        raw: content // 如果你还想保留原文作为 debug
-      };
-    } catch (error) {
-      console.error("AI翻訳エラー", error);
-      return {
-        reading: "（エラー）",
-        translation: "AI翻訳中にエラーが発生しました。",
-        raw: ""
-      };
-    }
-  }
-  
   async function handleSentenceClick(sentence) {
+    if (aiUsage >= 10) {
+      alert("今日の翻訳リクエストは10回までです。明日またお試しください！");
+      return;
+    }
+  
+    const newCount = aiUsage + 1;
+    setAiUsage(newCount);
+    const today = new Date().toISOString().split("T")[0];
+    localStorage.setItem("aiUsage", JSON.stringify({ date: today, count: newCount }));
+  
     setAnalyzingSentence(sentence);
-    setAnalysisResult("AIによる文法分析中...");
+    setAnalysisResult("AIによる翻訳中...");
   
     const prompt = `
-  以下の日本語の文に含まれる主な文法表現（助詞・文型）を1～2個挙げ、それぞれの意味と使い方を簡単に説明してください。JLPT N3〜N2レベルの学習者向けに、わかりやすくしてください。
-  
+  以下の日本語の文を${lang === "zh" ? "中国語" : "ベトナム語"}に翻訳してください。
   文：「${sentence}」
-  出力は以下のMarkdown形式に**限定**し、前置きや補足説明は書かないでください：
   
-  - 文法ポイント1：〇〇
-    - 意味：...
-    - 用法：...
-  - 文法ポイント2：〇〇
-    - 意味：...
-    - 用法：...
-  
-  簡潔に、100文字以内でまとめてください。
-    `.trim();
+  出力形式（訳のみで、説明なし）：
+  - 訳：...
+  `.trim();
   
     try {
       const res = await fetch("https://newjapan-api.onrender.com/api/explain", {
@@ -262,37 +193,50 @@ function App() {
       });
   
       const raw = await res.text();
-      console.log("📦 AI 返回原始内容:", raw);
+      const data = JSON.parse(raw);
+      const content = data.choices?.[0]?.message?.content || "";
   
-      let data;
-      try {
-        data = JSON.parse(raw);
-      } catch (err) {
-        console.error("❌ JSON 解析失败:", err);
-        setAnalysisResult("AI応答の解析に失敗しました。");
-        return;
-      }
-  
-      const output = data.choices?.[0]?.message?.content;
-      console.log("✅ OpenRouter 响应结果:", output);
-  
-      if (output) {
-        setAnalysisResult(output);
-        console.log("🎯 AI 文法分析結果：", output);
+      const match = content.match(/訳：(.+)/);
+      if (match) {
+        setAnalysisResult(match[1].trim());
       } else {
-        setAnalysisResult("解析結果が見つかりませんでした。");
+        setAnalysisResult("翻訳結果が見つかりませんでした。");
       }
     } catch (error) {
-      console.error("OpenRouter API エラー:", error);
-      setAnalysisResult("文法分析中にエラーが発生しました。");
+      console.error("翻訳エラー:", error);
+      setAnalysisResult("翻訳中にエラーが発生しました。");
     }
   }
+  
+  
+
+  if (!newsData) return <div className="text-center mt-10">Loading...</div>;
 
   return (
-    <div className="flex flex-col items-center p-6 gap-6 min-h-screen bg-gray-100 text-gray-900">
-      <h1 className="text-3xl font-bold text-blue-600 mb-4">やさしいニュース</h1>
-      <ScoreDisplay score={score} />
-
+    <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center p-6">
+      <div className="w-full max-w-4xl space-y-6">
+        <div className="bg-white border border-gray-200 rounded-xl shadow p-6 text-center space-y-4">
+          <h1 className="text-3xl font-bold text-indigo-600">簡単に言えば</h1>
+        
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 text-sm text-gray-700">
+          <div>
+            翻訳言語:{" "}
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              className="ml-1 border rounded px-2 py-1 text-sm"
+            >
+              <option value="vi">ベトナム語 🇻🇳</option>
+              <option value="zh">中国語 🇨🇳</option>
+            </select>
+          </div>
+  
+          <div className="text-gray-500 hidden sm:block">|</div>
+  
+          <ScoreDisplay score={score} answered={answeredCount} />
+        </div>
+      </div>
+  
       {!showOriginalMode ? (
         <SimplifiedNews
           newsData={newsData}
@@ -306,37 +250,46 @@ function App() {
           }}
           onPrevious={goToPreviousNews}
           onNext={goToNextNews}
+          keywords={keywords}
         />
       ) : (
-        <>
         <OriginalText
           newsData={newsData}
           sentences={sentences}
           onSentenceClick={handleSentenceClick}
           onBack={() => setShowOriginalMode(false)}
           onNext={goToNextNews}
+          keywords={keywords}
+          onWordClick={handleWordClick}
         />
-        </>
       )}
 
-        {showQuestion && (
-          <QuestionModal
-            questionText={questionText}
-            correctAnswer={correctAnswer}
-            isCorrect={isCorrect}
-            answerSelected={answerSelected}
-            onAnswer={handleAnswer}
-            onClose={() => setShowQuestion(false)}
-            onNext={goToNextNews}
-            onShowOriginal={() => {
-              setShowOriginalMode(true);
-              setShowQuestion(false);
-            }}
-          />
-        )}
+      {showQuestion && (
+        <QuestionModal
+          questionText={questionText}
+          correctAnswer={correctAnswer}
+          isCorrect={isCorrect}
+          answerSelected={answerSelected}
+          onAnswer={handleAnswer}
+          onClose={() => setShowQuestion(false)}
+          onNext={goToNextNews}
+          onShowOriginal={() => {
+            setShowOriginalMode(true);
+            setShowQuestion(false);
+          }}
+        />
+      )}
+
+      {showScoreSummary && (
+        <ScoreSummaryModal score={score} onClose={() => setShowScoreSummary(false)} />
+      )}
 
       {selectedWord && (
-        <WordPopup selectedWord={selectedWord} onClose={() => setSelectedWord(null)} />
+        <WordPopup
+          selectedWord={selectedWord}
+          onClose={() => setSelectedWord(null)}
+          lang={lang}
+        />
       )}
 
       <SentenceAnalysisPopup
@@ -346,6 +299,7 @@ function App() {
       />
 
     </div>
+  </div>
   );
 }
 
