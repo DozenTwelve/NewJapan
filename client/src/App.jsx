@@ -196,12 +196,16 @@ function App() {
       const data = JSON.parse(raw);
       const content = data.choices?.[0]?.message?.content || "";
   
-      const match = content.match(/訳：(.+)/);
+      const match = content.match(/(?:訳|翻訳)[：:]\s*(.+)/);
       if (match) {
         setAnalysisResult(match[1].trim());
       } else {
-        setAnalysisResult("翻訳結果が見つかりませんでした。");
+        // fallback: 尝试使用第一行作为翻译
+        const lines = content.split("\n").map(line => line.trim()).filter(Boolean);
+        const fallback = lines[0]?.replace(/^[-•●]?\s*(?:訳|翻訳)?[:：]?\s*/, "") || "翻訳結果が見つかりませんでした。";
+        setAnalysisResult(fallback);
       }
+      
     } catch (error) {
       console.error("翻訳エラー:", error);
       setAnalysisResult("翻訳中にエラーが発生しました。");
