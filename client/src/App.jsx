@@ -310,6 +310,7 @@ function App() {
       ) : (
         <>
         <OriginalText
+          newsData={newsData}
           sentences={sentences}
           onSentenceClick={handleSentenceClick}
           onBack={() => setShowOriginalMode(false)}

@@ -66,9 +66,27 @@ function SimplifiedNews({
     <div className="w-full max-w-3xl">
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg transition">
         <div className="p-6 sm:p-8">
-          <h2 className="text-2xl font-bold text-indigo-600 text-center mb-6">
-            {newsData.title}
-          </h2>
+        <div className="relative inline-block text-center mb-10">
+        <h2 className="text-2xl font-bold text-indigo-600">{newsData.title}</h2>
+        <div className="absolute -bottom-5 left-0 text-xs text-gray-500">
+            {new Date(newsData.time).toLocaleDateString("ja-JP", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+            })}
+            ・
+            <a
+            href={newsData.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-blue-600 ml-1"
+            >
+            NewsSite
+            </a>
+        </div>
+        </div>
+
+
 
           <div className="text-gray-800 space-y-6">
             {/* --- ここがポイント --- */}
