@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import ModernButton from "./components/ModernButton";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import WordPopup from "./WordPopup";
+import WordPopup from "./components/WordPopup";
+import ScoreDisplay from "./components/ScoreDisplay";
+import SentenceAnalysisPopup from "./components/SentenceAnalysisPopup";
+import QuestionModal from "./components/QuestionModal";
+import SimplifiedNews from "./components/SimplifiedNews";
+import OriginalText from "./components/OriginalText";
 
 function Button({ children, color = "blue", className = "", ...props }) {
   const colorMap = {
@@ -286,176 +291,58 @@ function App() {
   return (
     <div className="flex flex-col items-center p-6 gap-6 min-h-screen bg-gray-100 text-gray-900">
       <h1 className="text-3xl font-bold text-blue-600 mb-4">やさしいニュース</h1>
-      <div className="text-sm text-gray-600 font-medium">
-        今日のスコア：{score} / 10
-      </div>
+      <ScoreDisplay score={score} />
 
       {!showOriginalMode ? (
-        <div className="w-full max-w-3xl">
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg transition">
-          <div className="p-6 sm:p-8">
-            <h2 className="text-2xl font-bold text-indigo-600 text-center mb-6">
-              {newsData.title}
-            </h2>
-      
-            <div className="text-gray-800 space-y-6">
-              {/* --- ここがポイント --- */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  ここがポイント
-                </h3>
-                {cleanLineForParagraph(newsData.simplified?.why)
-                  .split("\n")
-                  .map(line => cleanLineForParagraph(line))
-                  .filter((line) => line.trim())
-                  .map((line, i) => (
-                    <p key={"why-" + i} className="text-base leading-relaxed">
-                    {renderWithClickableKanji(line, handleWordClick)}
-                  </p>
-                  ))}
-              </div>
-      
-              {/* --- いま おきていること --- */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  いま おきていること
-                </h3>
-                <ul className="list-disc pl-6 space-y-2">
-                  {(newsData.simplified?.what || "")
-                    .replace(/\n/g, "")
-                    .split(/(?<=[。！？])/)
-                    .map((line) => cleanLineForListItem(line))
-                    .filter((line) => line.length > 3)
-                    .map((sentence, i) => (
-                      <li key={"what-" + i} className="text-base leading-relaxed">
-                        {renderWithClickableKanji(sentence, handleWordClick)}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-      
-          {/* 按钮区域（保持不变） */}
-          {!showQuestion && (
-            <div className="flex justify-center items-center gap-4 border-t border-gray-100 bg-gray-50 px-6 py-4">
-              {!answerSelected ? (
-                <>
-                  <ModernButton
-                    variant="green"
-                    onClick={() => {
-                      setShowQuestion(true);
-                      setSelectedWord(null);
-                    }}
-                  >
-                    問題に進む
-                  </ModernButton>
-                  {currentIndex > 0 && (
-                    <ModernButton variant="gray" onClick={goToPreviousNews}>
-                      前のニュースへ
-                    </ModernButton>
-                  )}
-                </>
-              ) : (
-                <ModernButton variant="green" onClick={goToNextNews}>
-                  次のニュースへ
-                </ModernButton>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-      
-      
+        <SimplifiedNews
+          newsData={newsData}
+          onWordClick={handleWordClick}
+          showQuestion={showQuestion}
+          answerSelected={answerSelected}
+          currentIndex={currentIndex}
+          onStartQuestion={() => {
+            setShowQuestion(true);
+            setSelectedWord(null);
+          }}
+          onPrevious={goToPreviousNews}
+          onNext={goToNextNews}
+        />
       ) : (
         <>
-          <div className="w-full flex justify-center">
-            <div className="w-full max-w-4xl bg-white border border-gray-200 rounded-xl shadow p-8">
-              <h2 className="text-2xl font-bold text-center text-indigo-600 mb-6">原文</h2>
-
-              <div className="space-y-4 text-gray-800">
-                {sentences.map((sentence, i) => (
-                  <p
-                    key={i}
-                    className="text-base leading-relaxed cursor-pointer hover:bg-yellow-100 rounded px-2 py-1 transition"
-                    onClick={() => handleSentenceClick(sentence)}
-                  >
-                    {sentence}
-                  </p>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="mt-6 flex gap-4 justify-center">
-            <ModernButton variant="green" onClick={goToNextNews}>次のニュースへ</ModernButton>
-            <ModernButton variant="gray" onClick={() => setShowOriginalMode(false)}>戻る</ModernButton>
-          </div>
+        <OriginalText
+          sentences={sentences}
+          onSentenceClick={handleSentenceClick}
+          onBack={() => setShowOriginalMode(false)}
+          onNext={goToNextNews}
+        />
         </>
       )}
 
-      {showQuestion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">質問</h3>
-            <p className="text-gray-700 mb-6">{questionText}</p>
-
-            {!answerSelected ? (
-        <div className="flex justify-center gap-4">
-          <ModernButton variant="green" onClick={() => handleAnswer("〇")}>〇</ModernButton>
-          <ModernButton variant="red" onClick={() => handleAnswer("×")}>×</ModernButton>
-        </div>
-      ) : (
-        <div className="text-center">
-          <p className={`text-lg font-bold ${isCorrect ? "text-green-600" : "text-red-600"}`}>
-            {isCorrect ? "正解！" : "不正解。"}
-          </p>
-          <p className="text-sm text-gray-600 mt-2">正しい答え：{correctAnswer}</p>
-          <div className="mt-4 flex justify-center gap-3">
-            <ModernButton variant="green" onClick={goToNextNews}>次のニュースへ</ModernButton>
-            <ModernButton variant="gray" onClick={() => {
+        {showQuestion && (
+          <QuestionModal
+            questionText={questionText}
+            correctAnswer={correctAnswer}
+            isCorrect={isCorrect}
+            answerSelected={answerSelected}
+            onAnswer={handleAnswer}
+            onClose={() => setShowQuestion(false)}
+            onNext={goToNextNews}
+            onShowOriginal={() => {
               setShowOriginalMode(true);
               setShowQuestion(false);
-            }}>
-              原文を見る
-            </ModernButton>
-          </div>
-        </div>
-      )}
-
-            <div className="mt-6 text-center">
-              <ModernButton variant="gray" onClick={() => {
-                setShowQuestion(false);
-              }}>
-                閉じる
-              </ModernButton>
-            </div>
-          </div>
-        </div>
-      )}
+            }}
+          />
+        )}
 
       {selectedWord && (
         <WordPopup selectedWord={selectedWord} onClose={() => setSelectedWord(null)} />
       )}
 
-      {analyzingSentence && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-xl border border-gray-200 p-6 w-full max-w-lg z-50 backdrop-blur-sm">
-          <h3 className="text-base font-bold text-indigo-600 mb-2">文法分析</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            🔍 対象文：{analyzingSentence}
-          </p>
-
-          <div className="prose prose-sm max-w-none text-gray-800">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {analysisResult}
-            </ReactMarkdown>
-          </div>
-
-          <div className="mt-6 text-center">
-            <ModernButton variant="gray" onClick={() => setAnalyzingSentence(null)}>閉じる</ModernButton>
-          </div>
-        </div>
-      )}
-
+      <SentenceAnalysisPopup
+        analyzingSentence={analyzingSentence}
+        analysisResult={analysisResult}
+        onClose={() => setAnalyzingSentence(null)}
+      />
 
     </div>
   );

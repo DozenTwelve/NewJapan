@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import ModernButton from "./ModernButton";
 
 export default function WordPopup({ selectedWord, onClose }) {
   const popupRef = useRef();
@@ -24,12 +25,12 @@ export default function WordPopup({ selectedWord, onClose }) {
           ))}
         </div>
         <div className="text-right mt-2">
-          <button
+          <ModernButton
             onClick={onClose}
-            className="text-xs text-blue-500 hover:underline"
+            variant="gray"
           >
             閉じる
-          </button>
+          </ModernButton>
         </div>
       </div>
     </div>
