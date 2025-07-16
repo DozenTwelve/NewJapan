@@ -28,7 +28,7 @@ app.post("/api/explain", async (req, res) => {
         "X-Title": "Yasashii News Dev"
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-4-maverick:free", // ✅ 免费模型
+        model: "google/gemma-3n-e2b-it:free", // ✅ 免费模型
         messages: [
           {
             role: "system",
