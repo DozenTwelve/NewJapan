@@ -1,34 +1,30 @@
 # NHK Easy News Reader
 
-一个为日语学习者打造的交互式新闻阅读器。通过简化 NHK 新闻、关键词高亮、中越双语注释、查词功能和每日答题系统，帮助用户逐步提升日语阅读能力。
+An interactive news reader tailored for Japanese language learners. By simplifying NHK news articles, highlighting keywords, offering Chinese-Vietnamese bilingual annotations, and providing a daily quiz system, this project helps users gradually improve their reading skills in Japanese.
 
-> 🚀 项目已支持中文 & 越南语学习者，使用本地大语言模型生成简化摘要与关键词注释，适合自托管和二次开发。
+> 🚀 Supports both Chinese and Vietnamese learners. Built on a local LLM backend for summarization and keyword explanations. Ideal for self-hosting and further development.
 
 ## 📰 项目特色
 
-- 🔍 **新闻来源**：自动抓取 NHK 官方新闻网站（每次约 200 条）
-- ✂️ **简化新闻**：使用本地大模型生成简化版摘要，结构参考 Axios 风格（ここがポイント / いま おきていること）
-- 💡 **关键词提取**：高亮新闻中的核心词汇，并附中越双语解释
-- 📚 **词语查词**：点击高亮词语可查看假名、词义、音频播放（调用 [Jotoba API](https://jotoba.de/)）
-- 🧠 **AI 句子翻译**：支持点击整句调用本地大模型进行中文或越南语翻译
-- 🎯 **每日答题**：每篇新闻可生成 10 道题，每日答题并记录得分
-- 🌐 **语言切换**：中越双语切换支持，适配不同母语用户
-- 🧩 **组件模块化**：使用 React + Tailwind + shadcn/ui + Vite 构建，代码结构清晰，方便二次开发
+- 🔍 **新闻来源**：Automatically fetches ~200 articles from NHK's official website
+- ✂️ **简化新闻**：Uses a local LLM to generate summaries in Axios-style format (ここがポイント / いま おきていること)
+- 💡 **关键词提取**：Highlights key terms with bilingual (Chinese & Vietnamese) definitions
+- 📚 **词语查词**：Click on highlighted words to view readings, meanings, and play audio (via Jotoba API)
+- 🧠 **AI 句子翻译**：Click any sentence to get AI-powered translation (Chinese or Vietnamese) via cloud LLM
+- 🎯 **每日答题**：Each article generates 1 question; scores are tracked daily
+- 🌐 **语言切换**：Switch between Chinese and Vietnamese for interface and explanations
+- 🧩 **组件模块化**：Built with React + Tailwind + shadcn/ui + Vite for clean structure and easy customization
 
 ---
 
 ## 🛠 技术栈
 
-| 层级     | 技术               | 说明 |
-|----------|--------------------|------|
-| 前端     | React + Vite       | 快速构建现代 Web 应用 |
-| UI 库    | Tailwind CSS 4 + shadcn/ui | 组件清晰、样式统一，支持深色模式 |
-| 数据状态 | Zustand            | 状态管理简单直观 |
-| 请求接口 | Axios              | 请求本地模型、JSON 数据文件 |
-| 后端     | Python + FastAPI   | 关键词提取、简化生成等处理逻辑 |
-| 模型     | Gemma3:12B 本地部署（vLLM/msty） | 支持 OpenAI API 格式的本地大模型接口 |
-| 部署     | Render（或本地服务器） | 前后端独立部署 |
-
----
-
-## 🗂 项目目录结构（部分）
+| Layer      | Tech Stack                       | Description                                   |
+| ---------- | -------------------------------- | --------------------------------------------- |
+| Frontend   | React + Vite                     | Fast modern frontend                          |
+| UI Library | Tailwind CSS 4 + shadcn/ui       | Consistent UI with dark mode support          |
+| State Mgmt | Zustand                          | Lightweight and intuitive                     |
+| API Layer  | Axios                            | For fetching local model results and JSON     |
+| Backend    | Python + FastAPI                 | Handles simplification and keyword extraction |
+| Model      | Gemma3:12B (local via vLLM/msty) | OpenAI-compatible API endpoint                |
+| Hosting    | Render / Local Server            | Frontend and backend deployed separately      |
