@@ -28,7 +28,7 @@ app.post("/api/explain", async (req, res) => {
         "X-Title": "Yasashii News Dev"
       },
       body: JSON.stringify({
-        model: "google/gemma-3n-e2b-it:free", // ✅ 免费模型
+        model: "tngtech/deepseek-r1t2-chimera:free", // ✅ 免费模型
         messages: [
           {
             role: "system",
