@@ -4,20 +4,20 @@ An interactive news reader tailored for Japanese language learners. By simplifyi
 
 > 🚀 Supports both Chinese and Vietnamese learners. Built on a local LLM backend for summarization and keyword explanations. Ideal for self-hosting and further development.
 
-## 📰 项目特色
+## 📰 Features
 
-- 🔍 **新闻来源**：Automatically fetches ~200 articles from NHK's official website
-- ✂️ **简化新闻**：Uses a local LLM to generate summaries in Axios-style format (ここがポイント / いま おきていること)
-- 💡 **关键词提取**：Highlights key terms with bilingual (Chinese & Vietnamese) definitions
-- 📚 **词语查词**：Click on highlighted words to view readings, meanings, and play audio (via Jotoba API)
-- 🧠 **AI 句子翻译**：Click any sentence to get AI-powered translation (Chinese or Vietnamese) via cloud LLM
-- 🎯 **每日答题**：Each article generates 1 question; scores are tracked daily
-- 🌐 **语言切换**：Switch between Chinese and Vietnamese for interface and explanations
-- 🧩 **组件模块化**：Built with React + Tailwind + shadcn/ui + Vite for clean structure and easy customization
+- 🔍 **News Source**：Automatically fetches ~200 articles from NHK's official website
+- ✂️ **Simplified News**：Uses a local LLM to generate summaries in Axios-style format (ここがポイント / いま おきていること)
+- 💡 **Keyword Highlighting**：Highlights key terms with bilingual (Chinese & Vietnamese) definitions
+- 📚 **Click-to-Lookup**：Click on highlighted words to view readings, meanings, and play audio (via Jotoba API)
+- 🧠 **AI Translation**：Click any sentence to get AI-powered translation (Chinese or Vietnamese) via cloud LLM
+- 🎯 **Daily Quiz**：Each article generates 1 question; scores are tracked daily
+- 🌐 **Language Toggle**：Switch between Chinese and Vietnamese for interface and explanations
+- 🧩 **Modular Components**：Built with React + Tailwind + shadcn/ui + Vite for clean structure and easy customization
 
 ---
 
-## 🛠 技术栈
+## 🛠 Tech Stack
 
 | Layer      | Tech Stack                       | Description                                   |
 | ---------- | -------------------------------- | --------------------------------------------- |
